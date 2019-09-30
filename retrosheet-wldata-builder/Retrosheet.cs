@@ -338,15 +338,4 @@ namespace retrosheet_wldata_builder
             Map(m => m.AcquisitionInformation).Index(160);
         }
     }
-
-   // public class Retrosheet
-   // {
-
-  //      public string Id { get; set; }
-   //     public string Something { get; set; }
-        //public Retrosheet()
-        //{
-
-        //}
-   // }
 }

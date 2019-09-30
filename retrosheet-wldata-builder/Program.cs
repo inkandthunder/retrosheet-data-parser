@@ -13,7 +13,6 @@ namespace retrosheet_wldata_builder
         {
             var input = "data/GL2018.TXT";
             List<Team> teams = GetTeams("data/TEAMABR.TXT");
-            //List<Team> teams = new List<Team>();
             if (File.Exists(input))
             {
                 try
@@ -27,8 +26,8 @@ namespace retrosheet_wldata_builder
 
                         foreach (var record in records)
                         {
-                            Console.WriteLine();
-                            //Console.WriteLine(DateFormatter(record.Date) + " " + TeamNameLongFormatter(record.HomeTeamName, teams) + " (" + record.HomeTeamScore + ") vs. " + TeamNameLongFormatter(record.VisitingTeamName, teams) + " (" + record.VisitingTeamScore+ ")");
+                            //Console.WriteLine();
+                            Console.WriteLine(FriendlyDateFormat(record.Date) + " " + TeamNameLongFormatter(record.HomeTeamName, teams) + " (" + record.HomeTeamScore + ") vs. " + TeamNameLongFormatter(record.VisitingTeamName, teams) + " (" + record.VisitingTeamScore+ ")");
                         }
                         Console.WriteLine("Completed");
                         Console.ReadKey();
@@ -57,18 +56,20 @@ namespace retrosheet_wldata_builder
         {
             if (File.Exists(data))
             {
-                using var reader = new StreamReader(data);
-                using var csv = new CsvReader(reader);
-                csv.Configuration.HeaderValidated = null;
-                csv.Configuration.RegisterClassMap<TeamDataMap>();
-                var teams = csv.GetRecords<Team>();
-
-                List<Team> output = new List<Team>();
-                foreach (var team in teams)
+                using (var reader = new StreamReader(data))
+                using (var csv = new CsvReader(reader))
                 {
-                    output.Add(team);
+                    csv.Configuration.HeaderValidated = null;
+                    csv.Configuration.RegisterClassMap<TeamDataMap>();
+                    var teams = csv.GetRecords<Team>();
+
+                    List<Team> output = new List<Team>();
+                    foreach (var team in teams)
+                    {
+                        output.Add(team);
+                    }
+                    return output;
                 }
-                return output;
             }
             else
             {
@@ -89,68 +90,128 @@ namespace retrosheet_wldata_builder
 
         public static string LeagueLongFormatter(string league)
         {
-            var longLeague = league switch
+            string longLeague;
+            switch (league)
             {
-                "NA" => "National Association",
-                "NL" => "National League",
-                "AA" => "American Association",
-                "AL" => "American League",
-                _ => league,
-            };
+                case "NA":
+                    longLeague = "National Association";
+                    break;
+                case "NL":
+                    longLeague = "National League";
+                    break;
+                case "AA":
+                    longLeague = "American Association";
+                    break;
+                case "AL":
+                    longLeague = "American League";
+                    break;
+                default:
+                    longLeague = "";
+                    break;
+            }
             return longLeague;
         }
 
         public static string GameInformationFormatter(string game)
         {
-            var gameInformation = game switch
+            string gameInformation;
+            switch(game)
             {
-                "0" => "Single Game",
-                "1" => "First game of a double (or triple) header",
-                "2" => "Second game of a double (or triple) header",
-                "3" => "Third game of a triple header",
-                "A" => "First game of a double-header involving 3 teams",
-                "B" => "Second game of a double-header involving 3 teams",
-                _ => "",
-            };
+                case "0":
+                    gameInformation = "Single Game";
+                    break;
+                case "1":
+                    gameInformation = "First game of a double (or triple) header";
+                    break;
+                case "2":
+                    gameInformation = "Second game of a double (or triple) header";
+                    break;
+                case "3":
+                    gameInformation = "Third game of a triple header";
+                    break;
+                case "A":
+                    gameInformation = "First game of a double-header involving 3 teams";
+                    break;
+                case "B":
+                    gameInformation = "Second game of a double-header involving 3 teams";
+                    break;
+                default:
+                    gameInformation = "";
+                    break;
+            }
+
             return gameInformation;
         }
 
         public static string ForfeitFormatter(string forfeit)
         {
-            var forfeitInformation = forfeit switch
+            string forfeitInformation;
+            switch (forfeit)
             {
-                "V" => "Forfeited to the Visiting Team",
-                "H" => "Forfeited to the Home Team",
-                "T" => "No Decision",
-                _ => "",
-            };
+                case "V":
+                    forfeitInformation = "Forfeited to the Visiting Team";
+                    break;
+                case "H":
+                    forfeitInformation = "Forfeited to the Home Team";
+                    break;
+                case "T":
+                    forfeitInformation = "No Decision";
+                    break;
+                default:
+                    forfeitInformation = "";
+                    break;
+            }
             return forfeitInformation;
         }
 
         public static string ProtestFormatter(string protest)
         {
-            var protestInformation = protest switch
+            string protestInformation;
+            switch (protest)
             {
-                "P" => "Protested by an unidentified team",
-                "V" => "Disallowed protest made by visiting team",
-                "H" => "Disallowed protest made by home team",
-                "X" => "Upheld protest made by visiting team",
-                "Y" => "Uphead protest made by home team",
-                _ => "",
+                case "P":
+                    protestInformation = "Protested by an unidentified team";
+                    break;
+                case "V":
+                    protestInformation = "Disallowed protest made by visiting team";
+                    break;
+                case "H":
+                    protestInformation = "Disallowed protest made by home team";
+                    break;
+                case "X":
+                    protestInformation = "Upheld protest made by visiting team";
+                    break;
+                case "Y":
+                    protestInformation = "Uphead protest made by home team";
+                    break;
+                default:
+                    protestInformation = "";
+                    break;
             };
             return protestInformation;
         }
 
         public static string AcquisitionFormatter(string acquisition)
         {
-            var acquisitionInformation = acquisition switch
+            string acquisitionInformation;
+            switch (acquisition)
             {
-                "Y" => "Complete game information unavailable",
-                "N" => "No portion of the game available",
-                "D" => "Game information derived from box score and game story",
-                "P" => "Partial game information available, but may be missing complete innings",
-                _ => "",
-            };
+                case "Y":
+                    acquisitionInformation = "Complete game information unavailable";
+                    break;
+                case "N":
+                    acquisitionInformation = "No portion of the game available";
+                    break;
+                case "D":
+                    acquisitionInformation = "Game information derived from box score and game story";
+                    break;
+                case "P":
+                    acquisitionInformation = "Partial game information available, but may be missing complete innings";
+                    break;
+                default:
+                    acquisitionInformation = "";
+                    break;
+            }
             return acquisitionInformation;
         }
 
