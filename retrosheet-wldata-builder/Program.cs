@@ -9,10 +9,12 @@ namespace retrosheet_wldata_builder
 {
     class Program
     {
+        public static List<Team> teams = GetTeams("data/TEAMABR.TXT");
+        public static List<Game> games = new List<Game>();
+
         static void Main(string[] args)
         {
             var input = "data/GL2018.TXT";
-            List<Team> teams = GetTeams("data/TEAMABR.TXT");
             if (File.Exists(input))
             {
                 try
@@ -20,15 +22,32 @@ namespace retrosheet_wldata_builder
                     using (var reader = new StreamReader(input))
                     using (var csv = new CsvReader(reader))
                     {
-                        csv.Configuration.HeaderValidated = null;
+                        csv.Configuration.HasHeaderRecord = false;
                         csv.Configuration.RegisterClassMap<RetrosheetDataMap>();
                         var records = csv.GetRecords<RetrosheetGame>();
 
                         foreach (var record in records)
                         {
-                            //Console.WriteLine();
-                            Console.WriteLine(FriendlyDateFormat(record.Date) + " " + TeamNameLongFormatter(record.HomeTeamName, teams) + " (" + record.HomeTeamScore + ") vs. " + TeamNameLongFormatter(record.VisitingTeamName, teams) + " (" + record.VisitingTeamScore+ ")");
+                            //Home
+                            CreateGame(record.Date, record.HomeTeamName, false, int.Parse(record.HomeTeamScore), int.Parse(record.VisitingTeamScore), record.VisitingTeamName, "", record.HomeManagerName);
+
+                            //Visitors
+                            CreateGame(record.Date, record.VisitingTeamName, true, int.Parse(record.HomeTeamScore), int.Parse(record.VisitingTeamScore), record.HomeTeamName, "", record.VisitingManagerName);
                         }
+
+                        var grouped = games.OrderBy(x => x.GameNumber).GroupBy(x => x.Team);
+
+                        foreach (var group in grouped)
+                        {
+                            var groupKey = group.Key;
+                            foreach (var subgroup in group)
+                            {
+                                Console.WriteLine(subgroup.Team + "(" + subgroup.GameNumber + "/" + subgroup.ChartIndex + "): " + subgroup.EventTitleText + " " + subgroup.ResultText);
+                            }
+                            //Console.WriteLine(group.Key.);
+                            //Console.WriteLine(group.Team + "(" + group.GameNumber + "/" + temp.ChartIndex + "): " + temp.EventTitleText + " " + temp.ResultText);
+                        }
+
                         Console.WriteLine("Completed");
                         Console.ReadKey();
                     }
@@ -43,13 +62,67 @@ namespace retrosheet_wldata_builder
                 Console.WriteLine("File does not exist");
             }
             //foreach (var game in records)
+
+            Console.ReadKey();
+        }
+
+        public static void CreateGame(string date, string team, bool visiting, int homeScore, int visitorScore, string opponent, string result, string manager)
+        {
+            var currentGameCount = games.Where(x => x.Team == team).Select(y => y.GameNumber).LastOrDefault();
+            var currentIndex = games.Where(x => x.Team == team).Select(y => y.ChartIndex).LastOrDefault();
+
+            int myScore = 0;
+            int opponentScore = 0;
+            int GameNumber = currentGameCount;
+            int RunningIndex = currentIndex;
+            Game temp = new Game();
+            temp.Year = GetYear(date);
+            temp.Date = FriendlyDateFormat(date);
+            temp.Team = team;
+
+
+            if (visiting == true)
+            {
+                temp.EventTitleText = FriendlyDateFormat(date) + " at " + opponent;//Apr 9 at BAL
+                myScore = visitorScore;
+                opponentScore = homeScore;
+            }
+            else if (visiting == false)
+            {
+                temp.EventTitleText = FriendlyDateFormat(date) + " vs " + opponent;//Apr 9 at BAL
+                myScore = homeScore;
+                opponentScore = visitorScore;
+            }
+
+            if (myScore > opponentScore)
+            {
+                temp.ResultText = "W " + myScore + "-" + opponentScore;
+                temp.ChartIndex = (RunningIndex+1);
+            }
+            else
+            {
+                temp.ResultText = "L " + myScore + "-" + opponentScore;
+                temp.ChartIndex = (RunningIndex-1);
+            }
+            
+            temp.Manager = manager;
+            temp.GameNumber = GameNumber+1;
+            games.Add(temp);
+            //Console.WriteLine(temp.Team + "(" + temp.GameNumber + "/" + temp.ChartIndex + "): " + temp.EventTitleText + " " + temp.ResultText);
         }
 
 
         public static string FriendlyDateFormat(string date)
         {
             DateTime dt = DateTime.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture);
-            return dt.ToString("MM/dd/yyyy");
+            return dt.ToString("MMM dd");
+            //return dt.ToString("MM/dd/yyyy");
+        }
+
+        public static string GetYear(string date)
+        {
+            DateTime dt = DateTime.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture);
+            return dt.ToString("yyyy");
         }
 
         public static List<Team> GetTeams(string data)
