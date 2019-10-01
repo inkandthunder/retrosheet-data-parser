@@ -13,17 +13,13 @@ namespace retrosheet_wldata_builder
         public static List<Game> games = new List<Game>();
 
 
-        static void Main(string[] args)
+        static void Main()
         {
             string[] files = Directory.GetFiles("data/years");
             foreach (string file in files)
             {
-                //Console.WriteLine(Path.GetFullPath(file));
                 var input = Path.GetFullPath(file);
 
-            //}
-            //Console.ReadKey();
-            //var input = "data/GL2018.TXT";
                 if (File.Exists(input))
                 {
                 try
@@ -39,7 +35,7 @@ namespace retrosheet_wldata_builder
                         foreach (var record in records)
                         {
                             //Home
-                             CreateGame(record.Date, record.HomeTeamName, false, int.Parse(record.HomeTeamScore), int.Parse(record.VisitingTeamScore), record.VisitingTeamName, "", record.HomeManagerName);
+                            CreateGame(record.Date, record.HomeTeamName, false, int.Parse(record.HomeTeamScore), int.Parse(record.VisitingTeamScore), record.VisitingTeamName, "", record.HomeManagerName);
 
                             //Visitors
                             CreateGame(record.Date, record.VisitingTeamName, true, int.Parse(record.HomeTeamScore), int.Parse(record.VisitingTeamScore), record.HomeTeamName, "", record.VisitingManagerName);
@@ -47,8 +43,8 @@ namespace retrosheet_wldata_builder
 
     
 
-                        //Console.WriteLine("Completed");
-                        //Console.ReadKey();
+                      //  Console.WriteLine("Completed");
+                       // Console.ReadKey();
                     }
                 }
                 catch (Exception ex)
@@ -63,10 +59,56 @@ namespace retrosheet_wldata_builder
         }
 
             var grouped = games.OrderBy(x => x.Team).ThenBy(x => x.Year).ThenBy(x => x.GameNumber).ToList();
-
+            List<string> currentTeams = new List<string>(new string[] { "SEA","WAS","BAL","CLE","ANA","NYN","SDN","TEX","ARI","CHA","HOU","MIL","PHI","SLN","BOS","COL","LAN","NYA","SFN","TOR","ATL","CIN","KCA","MIN","PIT","TBA","CHN","DET","MIA","OAK" });
+            string yearIndex = "";
+            string teamIndex = "";
             foreach (var group in grouped)
             {
-                Console.WriteLine(group.Team + " " + group.Year + "{'x':" + group.GameNumber + ",'y':" + group.ChartIndex + ",'name':'" + group.EventTitleText + "','result':'" + group.ResultText + "'},");
+                if (teamIndex != group.Team)
+                {
+                    teamIndex = group.Team;
+                    Console.WriteLine("-------------------");
+                    Console.WriteLine("Begin " + group.Team);
+                }
+
+                if (yearIndex != group.Year)
+                {
+                    yearIndex = group.Year;
+
+                    Console.WriteLine("]");
+                    Console.WriteLine("},");
+                    Console.WriteLine("{");
+                    Console.WriteLine("name: \"y" + group.Year + "\",");
+                    Console.WriteLine("year: \"" + group.Year + "\",");
+                    Console.WriteLine("subtitle: \"Manager: " + group.Manager + "\",  ");
+                    //Console.WriteLine("title: \"" + group.Year + " " + TeamNameShortFormatter(group.Team, teams) + "2011 Red Sox 90 - 72(.556)" + "\",");
+                    //Console.WriteLine("won: " + 1 + ",");
+                    //Console.WriteLine("data: [");
+
+
+                    Console.WriteLine("***" + group.Year + "***");
+                    int winStatus;
+                    string yearAverage;
+                    var winTotal = grouped.Where(x => x.Team == group.Team && x.Year == group.Year).Select(y => y.RunningTotalWins).LastOrDefault();
+                    var lossTotal = grouped.Where(x => x.Team == group.Team && x.Year == group.Year).Select(y => y.RunningTotalLosses).LastOrDefault();
+                    if (winTotal > lossTotal)
+                    {
+                        winStatus = 1;
+                    }
+                    else
+                    {
+                        winStatus = 0;
+                    }
+                    yearAverage = (Math.Round((decimal) winTotal / (winTotal + lossTotal), 3)).ToString().TrimStart(new Char[] { '0' });
+
+                    Console.WriteLine("title: \"" + group.Year + " " + TeamNameShortFormatter(group.Team, teams) + " " + winTotal + " - " + lossTotal + " (" + yearAverage + ")\",");
+                    Console.WriteLine("won: " + winStatus + ",");
+                    Console.WriteLine("data: [");
+
+                   // Console.WriteLine("Wins: " + winTotal + " ,Losses: " + lossTotal + " ,Result: " + winStatus + " ,average: " + yearAverage);
+                }
+
+                Console.WriteLine(/*group.Team + " " + group.Year +*/ "{\"x\":" + group.GameNumber + ",\"y\":" + group.ChartIndex + ",\"name\":\"" + group.EventTitleText + "\",\"result\":\"" + group.ResultText + "\"},");
             }
 
             Console.ReadKey();
@@ -76,7 +118,8 @@ namespace retrosheet_wldata_builder
         {
             var currentGameCount = games.Where(x => x.Team == team && x.Year == GetYear(date)).Select(y => y.GameNumber).LastOrDefault();
             var currentIndex = games.Where(x => x.Team == team && x.Year == GetYear(date)).Select(y => y.ChartIndex).LastOrDefault();
-
+            var currentWins = games.Where(x => x.Team == team && x.Year == GetYear(date)).Select(y => y.RunningTotalWins).LastOrDefault();
+            var currentLosses = games.Where(x => x.Team == team && x.Year == GetYear(date)).Select(y => y.RunningTotalLosses).LastOrDefault();
             int myScore = 0;
             int opponentScore = 0;
             int GameNumber = currentGameCount;
@@ -85,7 +128,6 @@ namespace retrosheet_wldata_builder
             temp.Year = GetYear(date);
             temp.Date = FriendlyDateFormat(date);
             temp.Team = team;
-
 
             if (visiting == true)
             {
@@ -104,11 +146,15 @@ namespace retrosheet_wldata_builder
             {
                 temp.ResultText = "W " + myScore + "-" + opponentScore;
                 temp.ChartIndex = (RunningIndex+1);
+                temp.RunningTotalWins = (currentWins+1);
+                temp.RunningTotalLosses = currentLosses;
             }
             else
             {
                 temp.ResultText = "L " + myScore + "-" + opponentScore;
                 temp.ChartIndex = (RunningIndex-1);
+                temp.RunningTotalLosses = (currentLosses+1);
+                temp.RunningTotalWins = currentWins;
             }
             
             temp.Manager = manager;
@@ -121,7 +167,6 @@ namespace retrosheet_wldata_builder
         {
             DateTime dt = DateTime.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture);
             return dt.ToString("MMM dd");
-            //return dt.ToString("MM/dd/yyyy");
         }
 
         public static string GetYear(string date)
@@ -139,10 +184,10 @@ namespace retrosheet_wldata_builder
                 {
                     csv.Configuration.HeaderValidated = null;
                     csv.Configuration.RegisterClassMap<TeamDataMap>();
-                    var teams = csv.GetRecords<Team>();
+                    var teamsLocal = csv.GetRecords<Team>();
 
                     List<Team> output = new List<Team>();
-                    foreach (var team in teams)
+                    foreach (var team in teamsLocal)
                     {
                         output.Add(team);
                     }
@@ -293,11 +338,5 @@ namespace retrosheet_wldata_builder
             return acquisitionInformation;
         }
 
-        //public static LineScore LineScoreParser(string linescore)
-        //{
-
-        //}
-
     }
-
 }

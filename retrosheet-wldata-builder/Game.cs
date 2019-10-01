@@ -13,7 +13,7 @@ namespace retrosheet_wldata_builder
         public string EventTitleText { get; set; }
         public string ResultText { get; set; }
         public string Manager { get; set; }
-        public string RunningTotalWins { get; set; }
-        public string RunningTotalLosses { get; set; }
+        public int RunningTotalWins { get; set; }
+        public int RunningTotalLosses { get; set; }
     }
 }
