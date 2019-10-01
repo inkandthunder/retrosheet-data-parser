@@ -74,19 +74,12 @@ namespace retrosheet_wldata_builder
                 if (yearIndex != group.Year)
                 {
                     yearIndex = group.Year;
-
                     Console.WriteLine("]");
                     Console.WriteLine("},");
                     Console.WriteLine("{");
                     Console.WriteLine("name: \"y" + group.Year + "\",");
                     Console.WriteLine("year: \"" + group.Year + "\",");
                     Console.WriteLine("subtitle: \"Manager: " + group.Manager + "\",  ");
-                    //Console.WriteLine("title: \"" + group.Year + " " + TeamNameShortFormatter(group.Team, teams) + "2011 Red Sox 90 - 72(.556)" + "\",");
-                    //Console.WriteLine("won: " + 1 + ",");
-                    //Console.WriteLine("data: [");
-
-
-                    Console.WriteLine("***" + group.Year + "***");
                     int winStatus;
                     string yearAverage;
                     var winTotal = grouped.Where(x => x.Team == group.Team && x.Year == group.Year).Select(y => y.RunningTotalWins).LastOrDefault();
@@ -104,11 +97,9 @@ namespace retrosheet_wldata_builder
                     Console.WriteLine("title: \"" + group.Year + " " + TeamNameShortFormatter(group.Team, teams) + " " + winTotal + " - " + lossTotal + " (" + yearAverage + ")\",");
                     Console.WriteLine("won: " + winStatus + ",");
                     Console.WriteLine("data: [");
-
-                   // Console.WriteLine("Wins: " + winTotal + " ,Losses: " + lossTotal + " ,Result: " + winStatus + " ,average: " + yearAverage);
                 }
 
-                Console.WriteLine(/*group.Team + " " + group.Year +*/ "{\"x\":" + group.GameNumber + ",\"y\":" + group.ChartIndex + ",\"name\":\"" + group.EventTitleText + "\",\"result\":\"" + group.ResultText + "\"},");
+                Console.WriteLine("{\"x\":" + group.GameNumber + ",\"y\":" + group.ChartIndex + ",\"name\":\"" + group.EventTitleText + "\",\"result\":\"" + group.ResultText + "\"},");
             }
 
             Console.ReadKey();
