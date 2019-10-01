@@ -67,8 +67,6 @@ namespace retrosheet_wldata_builder
                     createText = "";
                     teamIndex = group.Team;
                     createText += "var " + group.Team + " = [{" + Environment.NewLine;
-                    Console.WriteLine("-------------------");
-                    Console.WriteLine("Begin " + group.Team);
                 }
 
                 if (yearIndex != group.Year)
