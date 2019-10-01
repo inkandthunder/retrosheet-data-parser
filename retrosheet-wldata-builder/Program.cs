@@ -12,11 +12,20 @@ namespace retrosheet_wldata_builder
         public static List<Team> teams = GetTeams("data/TEAMABR.TXT");
         public static List<Game> games = new List<Game>();
 
+
         static void Main(string[] args)
         {
-            var input = "data/GL2018.TXT";
-            if (File.Exists(input))
+            string[] files = Directory.GetFiles("data/years");
+            foreach (string file in files)
             {
+                //Console.WriteLine(Path.GetFullPath(file));
+                var input = Path.GetFullPath(file);
+
+            //}
+            //Console.ReadKey();
+            //var input = "data/GL2018.TXT";
+                if (File.Exists(input))
+                {
                 try
                 {
                     using (var reader = new StreamReader(input))
@@ -24,32 +33,22 @@ namespace retrosheet_wldata_builder
                     {
                         csv.Configuration.HasHeaderRecord = false;
                         csv.Configuration.RegisterClassMap<RetrosheetDataMap>();
+                        csv.Configuration.MissingFieldFound = null;
                         var records = csv.GetRecords<RetrosheetGame>();
 
                         foreach (var record in records)
                         {
                             //Home
-                            CreateGame(record.Date, record.HomeTeamName, false, int.Parse(record.HomeTeamScore), int.Parse(record.VisitingTeamScore), record.VisitingTeamName, "", record.HomeManagerName);
+                             CreateGame(record.Date, record.HomeTeamName, false, int.Parse(record.HomeTeamScore), int.Parse(record.VisitingTeamScore), record.VisitingTeamName, "", record.HomeManagerName);
 
                             //Visitors
                             CreateGame(record.Date, record.VisitingTeamName, true, int.Parse(record.HomeTeamScore), int.Parse(record.VisitingTeamScore), record.HomeTeamName, "", record.VisitingManagerName);
                         }
 
-                        var grouped = games.OrderBy(x => x.GameNumber).GroupBy(x => x.Team);
+    
 
-                        foreach (var group in grouped)
-                        {
-                            var groupKey = group.Key;
-                            foreach (var subgroup in group)
-                            {
-                                Console.WriteLine(subgroup.Team + "(" + subgroup.GameNumber + "/" + subgroup.ChartIndex + "): " + subgroup.EventTitleText + " " + subgroup.ResultText);
-                            }
-                            //Console.WriteLine(group.Key.);
-                            //Console.WriteLine(group.Team + "(" + group.GameNumber + "/" + temp.ChartIndex + "): " + temp.EventTitleText + " " + temp.ResultText);
-                        }
-
-                        Console.WriteLine("Completed");
-                        Console.ReadKey();
+                        //Console.WriteLine("Completed");
+                        //Console.ReadKey();
                     }
                 }
                 catch (Exception ex)
@@ -61,15 +60,31 @@ namespace retrosheet_wldata_builder
             {
                 Console.WriteLine("File does not exist");
             }
-            //foreach (var game in records)
+        }
+
+            //var grouped = games.OrderBy(x => x.GameNumber).GroupBy(x => new { x.Team, x.Year });//.Select(y => new { Team = y.Key.Team, Year = y.Key.Year, y.});
+
+            var grouped = games.OrderBy(x => x.Team).ThenBy(x => x.Year).ThenBy(x => x.GameNumber).ToList();
+
+            foreach (var group in grouped)
+            {
+                Console.WriteLine(group.Team + " " + group.Year + "{'x':" + group.GameNumber + ",'y':" + group.ChartIndex + ",'name':'" + group.EventTitleText + "','result':'" + group.ResultText + "'},");
+                //var groupKey = group.Key;
+                //foreach (var subgroup in group)
+                //{
+                //    Console.WriteLine(subgroup.Team + " " + subgroup.Year + "{'x':" + subgroup.GameNumber + ",'y':" + subgroup.ChartIndex + ",'name':'" + subgroup.EventTitleText + "','result':'" + subgroup.ResultText + "'},");
+                //}
+                //Console.WriteLine(group.Key.);
+                //Console.WriteLine(group.Team + "(" + group.GameNumber + "/" + temp.ChartIndex + "): " + temp.EventTitleText + " " + temp.ResultText);
+            }
 
             Console.ReadKey();
         }
 
         public static void CreateGame(string date, string team, bool visiting, int homeScore, int visitorScore, string opponent, string result, string manager)
         {
-            var currentGameCount = games.Where(x => x.Team == team).Select(y => y.GameNumber).LastOrDefault();
-            var currentIndex = games.Where(x => x.Team == team).Select(y => y.ChartIndex).LastOrDefault();
+            var currentGameCount = games.Where(x => x.Team == team && x.Year == GetYear(date)).Select(y => y.GameNumber).LastOrDefault();
+            var currentIndex = games.Where(x => x.Team == team && x.Year == GetYear(date)).Select(y => y.ChartIndex).LastOrDefault();
 
             int myScore = 0;
             int opponentScore = 0;
