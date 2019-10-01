@@ -62,20 +62,11 @@ namespace retrosheet_wldata_builder
             }
         }
 
-            //var grouped = games.OrderBy(x => x.GameNumber).GroupBy(x => new { x.Team, x.Year });//.Select(y => new { Team = y.Key.Team, Year = y.Key.Year, y.});
-
             var grouped = games.OrderBy(x => x.Team).ThenBy(x => x.Year).ThenBy(x => x.GameNumber).ToList();
 
             foreach (var group in grouped)
             {
                 Console.WriteLine(group.Team + " " + group.Year + "{'x':" + group.GameNumber + ",'y':" + group.ChartIndex + ",'name':'" + group.EventTitleText + "','result':'" + group.ResultText + "'},");
-                //var groupKey = group.Key;
-                //foreach (var subgroup in group)
-                //{
-                //    Console.WriteLine(subgroup.Team + " " + subgroup.Year + "{'x':" + subgroup.GameNumber + ",'y':" + subgroup.ChartIndex + ",'name':'" + subgroup.EventTitleText + "','result':'" + subgroup.ResultText + "'},");
-                //}
-                //Console.WriteLine(group.Key.);
-                //Console.WriteLine(group.Team + "(" + group.GameNumber + "/" + temp.ChartIndex + "): " + temp.EventTitleText + " " + temp.ResultText);
             }
 
             Console.ReadKey();
@@ -98,13 +89,13 @@ namespace retrosheet_wldata_builder
 
             if (visiting == true)
             {
-                temp.EventTitleText = FriendlyDateFormat(date) + " at " + opponent;//Apr 9 at BAL
+                temp.EventTitleText = FriendlyDateFormat(date) + " at " + opponent;
                 myScore = visitorScore;
                 opponentScore = homeScore;
             }
             else if (visiting == false)
             {
-                temp.EventTitleText = FriendlyDateFormat(date) + " vs " + opponent;//Apr 9 at BAL
+                temp.EventTitleText = FriendlyDateFormat(date) + " vs " + opponent;
                 myScore = homeScore;
                 opponentScore = visitorScore;
             }
@@ -123,7 +114,6 @@ namespace retrosheet_wldata_builder
             temp.Manager = manager;
             temp.GameNumber = GameNumber+1;
             games.Add(temp);
-            //Console.WriteLine(temp.Team + "(" + temp.GameNumber + "/" + temp.ChartIndex + "): " + temp.EventTitleText + " " + temp.ResultText);
         }
 
 
